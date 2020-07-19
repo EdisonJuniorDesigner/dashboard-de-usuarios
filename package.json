@@ -1,0 +1,11 @@
+{
+  "name": "dashboard-de-usuarios",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/EdisonJuniorDesigner/dashboard-de-usuarios.git",
+  "author": "EdisonJuniorDesigner <mage1232010@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {},
+  "devDependencies": {}
+}
