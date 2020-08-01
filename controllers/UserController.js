@@ -9,127 +9,145 @@ class UserController {
     this.selectAll();
   }
 
-  onEdit() {
+  onEdit(){
 
-    document.querySelector("#box-user-update .btn-cancel").addEventListener("click", e=>{
+      document.querySelector("#box-user-update .btn-cancel").addEventListener("click", e=>{
 
-      this.showPanelCreate();
+          this.showPanelCreate();
 
-    });
-
-    this.formUpdateEl.addEventListener("submit", event => {
-
-      event.preventDefault();
-
-      let btn = this.formUpdateEl.querySelector("[type=submit]");
-
-      btn.disabled = true;
-
-      let values = this.getValues(this.formUpdateEl);
-
-      let index = this.formUpdateEl.dataset.trIndex;
-
-      let tr = this.tableEl.rows[index];
-
-      let userOld = JSON.parse(tr.dataset.user);
-
-      let result = Object.assign({}, userOld, values);
-
-        this.showPanelCreate();
-
-        this.getPhoto(this.formUpdateEl).then(
-          (content) => {
-            
-            if (!values.photo) {
-            
-              result._photo = userOld._photo;
-
-            } else {
-
-              result._photo = content;
-
-            }
-
-            let user = new User();
-
-            user.loadFromJSON(result);
-
-            user.save();
-
-            this.getTr(user, tr);
-
-            this.updateCount();
-
-            this.formUpdateEl.reset();
-  
-            btn.disabled = false;
-          },
-          (e) => {
-            console.error(e);
-          }
-        );
-
-    });
-
-  }
-
-  onSubmit() {
-    this.formEl.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      let btn = this.formEl.querySelector("[type=submit]");
-
-      btn.disabled = true;
-
-      let values = this.getValues(this.formEl);
-
-      if (!values) return false;
-
-      this.getPhoto().then(
-        (content) => {
-          values.photo = content;
-
-          values.save();
-
-          this.addLine(values);
-
-          this.formEl.reset();
-
-          btn.disabled = false;
-        },
-        (e) => {
-          console.error(e);
-        }
-      );
-    });
-  }
-
-  getPhoto() {
-    return new Promise((resolve, reject) => {
-      let fileReader = new FileReader();
-
-      let elements = [...this.formEl.elements].filter((item) => {
-        if (item.name === "photo") {
-          return item;
-        }
       });
 
-      let file = elements[0].files[0];
+      this.formUpdateEl.addEventListener("submit", event => {
 
-      fileReader.onload = () => {
-        resolve(fileReader.result);
-      };
+          event.preventDefault();
 
-      fileReader.onerror = (e) => {
-        reject(e);
-      };
+          let btn = this.formUpdateEl.querySelector("[type=submit]");
 
-      if (file) {
-        fileReader.readAsDataURL(file);
-      } else {
-        resolve("dist/img/avatar-default.jpg");
-      }
-    });
+          btn.disabled = true;
+
+          let values = this.getValues(this.formUpdateEl);
+
+          let index = this.formUpdateEl.dataset.trIndex;
+
+          let tr = this.tableEl.rows[index];
+
+          let userOld = JSON.parse(tr.dataset.user);
+
+          let result = Object.assign({}, userOld, values);
+
+          this.getPhoto(this.formUpdateEl).then(
+              (content) => {
+
+                  if (!values.photo) {
+                      result._photo = userOld._photo;
+                  } else {
+                      result._photo = content;
+                  }
+
+                  let user = new User();
+
+                  user.loadFromJSON(result);
+
+                  user.save().then(user => {
+
+                      this.getTr(user, tr);
+
+                      this.updateCount();
+
+                      this.formUpdateEl.reset();
+
+                      btn.disabled = false;
+
+                      this.showPanelCreate();
+                      
+                  });
+
+              },
+              (e) => {
+                  console.error(e);
+              }
+          );
+
+      });
+
+  }
+
+
+  onSubmit(){
+
+      this.formEl.addEventListener("submit", event => {
+
+          event.preventDefault();
+
+          let btn = this.formEl.querySelector("[type=submit]");
+
+          btn.disabled = true;
+
+          let values = this.getValues(this.formEl);
+
+          if (!values) return false;
+
+          this.getPhoto(this.formEl).then(
+              (content) => {
+                  
+                  values.photo = content;
+
+                  values.save().then(user => {
+
+                      this.addLine(user);
+
+                      this.formEl.reset();
+
+                      btn.disabled = false;
+                      
+                  });
+
+              }, 
+              (e) => {
+                  console.error(e);
+              }
+          );
+
+      });
+
+  }
+
+  getPhoto(formEl){
+
+      return new Promise((resolve, reject)=>{
+
+          let fileReader = new FileReader();
+
+          let elements = [...formEl.elements].filter(item => {
+
+              if (item.name === 'photo') {
+                  return item;
+              }
+
+          });
+
+          let file = elements[0].files[0];
+
+          fileReader.onload = () => {
+
+              resolve(fileReader.result);
+
+          };
+
+          fileReader.onerror = (e)=>{
+
+              reject(e);
+
+          };
+
+          if (file) {
+              fileReader.readAsDataURL(file);
+          } else {
+              resolve('dist/img/avatar-default.jpg');
+          }
+
+      });
+
   }
 
   getValues(formEl) {
@@ -174,15 +192,17 @@ class UserController {
 
   selectAll(){
 
-    let users = User.getUsersStorage();
+    User.getUsersStorage().then(data => {
 
-    users.forEach(dataUser => {
+      data.users.forEach(dataUser => {
 
         let user = new User();
 
         user.loadFromJSON(dataUser);
 
         this.addLine(user);
+
+      });
 
     });
 
@@ -236,11 +256,13 @@ class UserController {
 
         user.loadFromJSON(JSON.parse(tr.dataset.user));
 
-        user.remove();
-        
-        tr.remove();
+        user.remove().then(data => {
 
-        this.updateCount();
+          tr.remove();
+
+          this.updateCount();
+
+        });
 
       }
 

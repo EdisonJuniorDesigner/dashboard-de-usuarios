@@ -1,166 +1,139 @@
 class User {
 
-  constructor(name, gender, birth, country, email, password, photo, admin){
+    constructor(name, gender, birth, country, email, password, photo, admin){
 
-      this._id;
-      this._name = name;
-      this._gender = gender;
-      this._birth = birth;
-      this._country = country;
-      this._email = email;
-      this._password = password;
-      this._photo = photo;
-      this._admin = admin;
-      this._register = new Date();
+        this._id;
+        this._name = name;
+        this._gender = gender;
+        this._birth = birth;
+        this._country = country;
+        this._email = email;
+        this._password = password;
+        this._photo = photo;
+        this._admin = admin;
+        this._register = new Date();
 
-  }
+    }
 
-  get id(){
-      return this._id;
-  }
+    get id(){
+        return this._id;
+    }
 
-  get register(){
-      return this._register;
+    get register(){
+        return this._register;
+    }
 
-  }
+    get name(){
+        return this._name;
+    }
 
+    get gender() {
+        return this._gender;
+    }
 
-  get name() {
-      return this._name;
+    get birth() {
+        return this._birth;
+    }
 
-  }
+    get country() {
+        return this._country;
+    }
 
-  get gender() {
-      return this._gender;
+    get email() {
+        return this._email;
+    }
 
-  }
+    get photo() {
+        return this._photo;
+    }
 
-  get birth() {
-      return this._birth;
+    get password() {
+        return this._password;
+    }
 
-  }
+    get admin() {
+        return this._admin;
+    }
 
-  get country() {
-      return this._country;
+    set photo(value){
+        this._photo = value;
+    }
 
-  }
+    loadFromJSON(json){
 
-  get email() {
-      return this._email;
+        for (let name in json){
+            
+            switch(name){
 
-  }
+                case '_register':
+                    this[name] = new Date(json[name]);
+                break;
+                default:
+                    if (name.substring(0, 1) === '_') this[name] = json[name];
 
-  get photo() {
-      return this._photo;
-
-  }
-
-  get password(){
-      return this._password;
-
-  }
-
-  get admin() {
-      return this._admin;
-  }
-
-  set photo(value){
-      this._photo = value;
-      
-  }
-
-  loadFromJSON(json){
-
-    for (let name in json){
-
-        switch(name){
-
-            case '_register':
-                this[name] = new Date (json[name]);
-            break;
-            default:
-                this[name] = json[name];
+            }
+            
 
         }
 
     }
 
-  }
+    static getUsersStorage() {
 
-    static getUsersStorage(){
-
-        let users = [];
-
-        if (localStorage.getItem("users")) {
-
-            users = JSON.parse(localStorage.getItem("users"));
-
-        }
-
-        return users;
+        return Fetch.get('/users');
 
     }
 
-    getNewID(){
+    toJSON(){
 
-        let usersID = Number(localStorage.getItem("usersID"));
+        let json = {};
+        
+        Object.keys(this).forEach(key => {
 
-        if (!usersID > 0) usersID = 0;
+            if (this[key] !== undefined) json[key] = this[key];
 
-        usersID++
+        });
 
-        localStorage.setItem("usersID", usersID);
-
-        return usersID;
+        return json;
 
     }
-
 
     save(){
 
-        let users = User.getUsersStorage();
+        return new Promise((resolve, reject) => {
 
-        if (this.id > 0) {
-            
-            users.map(u=>{
+            let promise;
 
-                if (u._id == this.id) {
+            if (this.id) {
 
-                    Object.assign(u, this);
+                promise = Fetch.put(`/users/${this.id}`, this.toJSON());
 
-                }
+            } else {
 
-                return u;
+                promise = Fetch.post(`/users`, this.toJSON());
+
+            }
+
+            promise.then(data => {
+
+                this.loadFromJSON(data);
+
+                resolve(this);
+
+            }).catch(e => {
+
+                reject(e);
 
             });
 
-        } else {
-
-            this._id = this.getNewID();
-
-            users.push(this);     
-
-        }
-
-        localStorage.setItem("users", JSON.stringify(users));
+        });
 
     }
 
     remove(){
 
-        let users = User.getUsersStorage();
-
-        users.forEach((userData, index)=>{
-
-            if (this._id == userData._id) {
-
-                users.splice(index, 1);
-
-            }
-
-        });
-
-        localStorage.setItem("users", JSON.stringify(users));
+        return Fetch.delete(`/users/${this.id}`);
 
     }
+
 }
